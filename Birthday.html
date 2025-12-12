@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🎧 Квест для Стаса</title>
+  <style>
+    :root{
+      --bg:#0b0f19; --card:rgba(255,255,255,.08); --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.66); --accent:#7cf7d4; --danger:#ff6b6b; --ok:#9cff8f;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(124,247,212,.16), transparent 60%),
+                  radial-gradient(900px 600px at 90% 20%, rgba(124,140,247,.12), transparent 55%),
+                  var(--bg);
+      min-height:100vh; display:grid; place-items:center; padding:24px;
+    }
+    .wrap{width:min(760px,100%)}
+    .card{
+      background: linear-gradient(180deg,var(--card),rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:20px; padding:22px; box-shadow:0 16px 60px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+    }
+    .top{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:14px}
+    .badge{
+      padding:6px 10px; border-radius:999px;
+      background: rgba(124,247,212,.14);
+      border:1px solid rgba(124,247,212,.28);
+      color: var(--accent);
+      font-size:12px; white-space:nowrap;
+    }
+    h1{margin:0 0 8px; font-size:22px}
+    p{margin:0 0 14px; color:var(--muted); line-height:1.45}
+    .progress{height:10px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+      border-radius:999px; overflow:hidden; margin:12px 0 18px}
+    .bar{height:100%; width:0%; background: linear-gradient(90deg,var(--accent), rgba(124,140,247,.9));}
+    .q{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+      border-radius:16px; padding:16px; margin-top:10px}
+    .q-title{font-weight:700; margin-bottom:10px}
+    input[type="text"], textarea{
+      width:100%; padding:12px; border-radius:12px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.16);
+      color:var(--text); outline:none; font-size:15px;
+    }
+    textarea{min-height:86px; resize:vertical}
+    .choices{display:grid; gap:10px}
+    .choice{display:flex; gap:10px; align-items:center; padding:12px; border-radius:14px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); cursor:pointer; user-select:none}
+    .choice:hover{background:rgba(255,255,255,.08)}
+    .choice input{accent-color:var(--accent)}
+    .row{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+    button{
+      border:0; border-radius:14px; padding:12px 14px; cursor:pointer; font-weight:700;
+      color:#041015; background:linear-gradient(180deg,var(--accent), rgba(124,247,212,.88));
+    }
+    button.secondary{
+      color:var(--text); background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); font-weight:600;
+    }
+    button:disabled{opacity:.55; cursor:not-allowed}
+    .hint{font-size:12px; color:var(--muted); margin-top:10px}
+    .msg{margin-top:10px; font-weight:650}
+    .msg.ok{color:var(--ok)} .msg.bad{color:var(--danger)}
+    .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .box{
+      margin-top:14px; padding:14px; border-radius:16px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    }
+    img.qr{max-width:280px; width:100%; border-radius:12px; border:1px solid rgba(255,255,255,.12)}
+    .small{font-size:12px; color:var(--muted)}
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="top">
+      <div class="badge" id="stepBadge">Шаг 1/9</div>
+      <div class="badge mono" id="timer">⏱ 00:00</div>
+    </div>
+
+    <h1 id="title">🎁 Квест для Стаса</h1>
+    <p id="subtitle">Ты почти у цели. Но сначала — пару задачек 🙂</p>
+
+    <div class="progress"><div class="bar" id="bar"></div></div>
+
+    <div id="stage"></div>
+
+    <div class="row">
+      <button class="secondary" id="backBtn">← Назад</button>
+      <button id="nextBtn">Дальше →</button>
+    </div>
+
+    <div class="hint" id="hint"></div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <p class="small" style="margin-top:12px;">
+    В одной папке с этим файлом должны лежать: <span class="mono">index.html</span> и <span class="mono">qr.png</span>.
+  </p>
+</div>
+
+<script>
+const CONFIG = {
+  // ❗ ТУТ ТЫ ПОТОМ САМА ВПИШЕШЬ КОД, КОТОРЫЙ БУДЕТ НА КОРОБКЕ
+  // Например: secretCode: "R1CK-2025"
+  secretCode: "CHANGE_ME",
+
+  // картинка с QR, который ведёт на отдельную страницу с аудио (audio.html или любая другая ссылка)
+  qrImageSrc: "qr.png",
+
+  // просто чтобы не пропускать пустые ответы
+  requireNonEmptyAnswers: true,
+};
+
+/**
+ * STEPS:
+ *  - intro
+ *  - 7 вопросов
+ *  - ввод кода (с коробки)
+ *  - показ QR
+ */
+const STEPS = [
+  {
+    id: "intro",
+    type: "info",
+    title: "Привет, разработчик 😎",
+    subtitle: "У тебя маленький квест. В конце появится QR, а за ним — кое-что, что лучше слушать в наушниках.",
+    body: "Это не тест, а больше совместная шутка и мини-приключение. Если что-то идёт не так — Нася всегда может подсказать 😉"
+  },
+
+  // 1) Kotlin задача 1 — String vs Int
+  {
+    id: "kotlin1",
+    type: "mcq",
+    title: "Kotlin задача 1 — String vs Int",
+    subtitle: "Что выведет этот Kotlin-код?",
+    code: 'println("2" + 2)',
+    options: [
+      "4",
+      "22",
+      "Ошибка",
+      "Ничего, ведь Стас не включил компилятор"
+    ],
+    correctIndex: 1,
+    wrongMsg: "А вот и неть с:"
+  },
+
+  // 2) You son of a bitch — кто сказал?
+  {
+    id: "lily",
+    type: "mcq",
+    title: "You son of a bitch — кто сказал?",
+    subtitle: "",
+    options: [
+      "Lily Potter",
+      "Lily Whatever-her-surname-is",
+      "Lily Aldrin",
+      "Lily Shmili Vily"
+    ],
+    correctIndex: 2,
+    wrongMsg: "Please."
+  },
+
+  // 3) JS: сколько будет 1+1
+  {
+    id: "js11",
+    type: "text",
+    title: "JS: сколько будет 1 + 1 на языке JavaScript?",
+    subtitle: "Подсказка: JavaScript иногда слишком дружелюбен к строкам.",
+    placeholder: "введи результат",
+    correctText: "11",
+    wrongMsg: "Попробуй быть чуточку проще."
+  },
+
+  // 4) Pickle Rick
+  {
+    id: "pickle",
+    type: "mcq",
+    title: "Pickle Rick — серия и сезон",
+    subtitle: "В какой серии какого сезона Рик стал огурчиком?",
+    options: [
+      "2 серия 4 сезон",
+      "3 серия 3 сезон",
+      "4 серия 2 сезон",
+      "5 серия 2 сезона"
+    ],
+    correctIndex: 1,
+    wrongMsg: "Oh geez, Stas"
+  },
+
+  // 5) Kotlin задача 3 — Elvis оператор
+  {
+    id: "kotlinElvis",
+    type: "mcq",
+    title: "Kotlin задача 3 — Elvis оператор",
+    subtitle: "Как называется оператор ?: в Kotlin?",
+    options: [
+      "Элвис оператор",
+      "Дарвин оператор",
+      "Моцарт оператор",
+      "Рик оператор"
+    ],
+    correctIndex: 0,
+    wrongMsg: "Uh-oh, wrong timeline, Morty."
+  },
+
+  // 6) В любой непонятной ситуации...
+  {
+    id: "situation",
+    type: "mcq",
+    title: "Продолжи фразу: «В любой непонятной ситуации…»",
+    subtitle: "",
+    options: [
+      "Говори Вубба Лубба даб-даб",
+      "Показывай письку",
+      "Садись писать код",
+      "Можно прояснить ситуацию."
+    ],
+    correctIndex: 1,
+    wrongMsg: "На самом деле ты знаешь правильный ответ, не отрицай этого."
+  },
+
+  // 7) финальный "тык"
+  {
+    id: "love",
+    type: "mcq",
+    title: "Просто сделай тык",
+    subtitle: "Здесь нет неправильных вариантов. Но один — самый важный.",
+    options: [
+      "Я тебя люблю ❤️"
+    ],
+    correctIndex: 0,
+    wrongMsg: "" // по факту недостижимо, но оставим
+  },
+
+  // 8) ввод кода с коробки
+  {
+    id: "code",
+    type: "code",
+    title: "Финальный шаг: код",
+    subtitle: "Введи код, который спрятан на коробке. (Нася знает, где искать 😉)",
+    placeholder: "введи код с коробки"
+  },
+
+  // 9) показ QR
+  {
+    id: "reveal",
+    type: "reveal",
+    title: "🎉 Доступ открыт",
+    subtitle: "QR появился. Сканируй — он ведёт к следующей комнате квеста.",
+  }
+];
+
+let state = { stepIndex: 0, answers: {}, codeUnlocked: false };
+
+const el = {
+  stage: document.getElementById("stage"),
+  title: document.getElementById("title"),
+  subtitle: document.getElementById("subtitle"),
+  hint: document.getElementById("hint"),
+  msg: document.getElementById("msg"),
+  nextBtn: document.getElementById("nextBtn"),
+  backBtn: document.getElementById("backBtn"),
+  bar: document.getElementById("bar"),
+  stepBadge: document.getElementById("stepBadge"),
+  timer: document.getElementById("timer"),
+};
+
+function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+
+function render() {
+  const step = STEPS[state.stepIndex];
+  const total = STEPS.length;
+
+  el.stepBadge.textContent = `Шаг ${state.stepIndex + 1}/${total}`;
+  el.bar.style.width = `${((state.stepIndex) / (total - 1)) * 100}%`;
+
+  el.msg.textContent = ""; el.msg.className = "msg";
+  el.hint.textContent = "";
+
+  el.title.textContent = step.title;
+  el.subtitle.textContent = step.subtitle || "";
+
+  el.backBtn.disabled = state.stepIndex === 0;
+  el.nextBtn.textContent = state.stepIndex === total - 1 ? "Готово ✨" : "Дальше →";
+
+  el.stage.innerHTML = "";
+
+  if (step.type === "info") renderInfo(step);
+  if (step.type === "mcq") renderMCQ(step);
+  if (step.type === "text") renderText(step);
+  if (step.type === "code") renderCode(step);
+  if (step.type === "reveal") renderReveal(step);
+}
+
+function renderInfo(step){
+  const box = document.createElement("div");
+  box.className = "q";
+  box.innerHTML = `
+    <div class="q-title">✨ Инструкция</div>
+    <p>${step.body}</p>
+    <div class="box small">
+      На финише появится QR-код. За ним — отдельная страница с аудио.<br/>
+      А ещё где-то рядом в реальности уже лежат наушники 😉
+    </div>
+  `;
+  el.stage.appendChild(box);
+}
+
+function renderMCQ(step){
+  const box = document.createElement("div");
+  box.className = "q";
+  let extra = "";
+  if (step.code){
+    extra = `<pre class="mono" style="background:rgba(0,0,0,.3); padding:8px 10px; border-radius:10px; font-size:13px; margin-bottom:10px;">${step.code}</pre>`;
+  }
+  box.innerHTML = `<div class="q-title">${step.title}</div>${extra}`;
+  const choices = document.createElement("div");
+  choices.className = "choices";
+  const saved = state.answers[step.id];
+
+  step.options.forEach((opt, idx) => {
+    const label = document.createElement("label");
+    label.className = "choice";
+    label.innerHTML = `
+      <input type="radio" name="${step.id}" value="${idx}" ${String(saved)===String(idx)?"checked":""}/>
+      <div>${opt}</div>
+    `;
+    label.addEventListener("click", () => state.answers[step.id] = idx);
+    choices.appendChild(label);
+  });
+
+  box.appendChild(choices);
+  el.stage.appendChild(box);
+  el.hint.textContent = step.id === "love"
+    ? "Тут правда нет неправильного ответа 🙂"
+    : "Выбери вариант. В некоторых вопросах есть один правильный.";
+}
+
+function renderText(step){
+  const box = document.createElement("div");
+  box.className = "q";
+  box.innerHTML = `<div class="q-title">${step.title}</div>`;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = step.placeholder || "";
+  input.value = state.answers[step.id] || "";
+  input.addEventListener("input", e => state.answers[step.id] = e.target.value);
+  box.appendChild(input);
+  el.stage.appendChild(box);
+}
+
+function renderCode(step){
+  const box = document.createElement("div");
+  box.className = "q";
+  box.innerHTML = `<div class="q-title">${step.title}</div>`;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = step.placeholder || "";
+  input.value = state.answers[step.id] || "";
+  input.addEventListener("input", e => state.answers[step.id] = e.target.value);
+  box.appendChild(input);
+
+  const note = document.createElement("div");
+  note.className = "small";
+  note.style.marginTop = "10px";
+  note.innerHTML = `Подсказка: если что — <b>Нася</b> знает, где спрятан код 😏`;
+  box.appendChild(note);
+
+  el.stage.appendChild(box);
+}
+
+function renderReveal(step){
+  const box = document.createElement("div");
+  box.className = "q";
+  box.innerHTML = `
+    <div class="q-title">🎁 Финал (часть 1)</div>
+    <p>QR появился. Сканируй его камерой или приложением для сканирования QR.</p>
+    <div class="box">
+      <img class="qr" src="${CONFIG.qrImageSrc}" alt="QR code"/>
+      <div class="small" style="margin-top:8px;">
+        Если QR не видно — значит файл <span class="mono">${CONFIG.qrImageSrc}</span> не лежит рядом с <span class="mono">index.html</span>.
+      </div>
+    </div>
+  `;
+  el.stage.appendChild(box);
+  el.hint.textContent = "Следующая страница (по QR) — с аудио. И да, наушники пригодятся 🎧";
+}
+
+function validateStep(){
+  const step = STEPS[state.stepIndex];
+  const val = state.answers[step.id];
+
+  if (step.type === "info") return null;
+
+  if (step.type === "mcq"){
+    if (val === undefined) return "Выбери вариант 🙂";
+    if (typeof step.correctIndex === "number"){
+      if (Number(val) !== step.correctIndex){
+        return step.wrongMsg || "Неверный ответ 🙂";
+      }
+    }
+    return null;
+  }
+
+  if (step.type === "text"){
+    if (!val || String(val).trim().length < 1){
+      return "Напиши что-нибудь 🙂";
+    }
+    if (step.correctText){
+      const entered = String(val).trim();
+      if (entered !== step.correctText){
+        return step.wrongMsg || "Неверный ответ 🙂";
+      }
+    }
+    return null;
+  }
+
+  if (step.type === "code"){
+    const entered = (val || "").trim();
+    if (!entered) return "Введи код с коробки 🙂";
+    if (CONFIG.secretCode === "CHANGE_ME"){
+      return "Похоже, код ещё не настроен. Это уже вопрос к Нaсе 😉";
+    }
+    if (entered !== CONFIG.secretCode){
+      return "Не-а 😄 Проверь код на коробке ещё раз (или спроси Насю).";
+    }
+    state.codeUnlocked = true;
+    return null;
+  }
+
+  if (step.type === "reveal"){
+    if (!state.codeUnlocked) return "Сначала нужен правильный код 🙂";
+    return null;
+  }
+
+  return null;
+}
+
+el.nextBtn.addEventListener("click", () => {
+  if (state.stepIndex === STEPS.length - 1){
+    el.msg.textContent = "✨ Готово. Дальше — по QR.";
+    el.msg.className = "msg ok";
+    return;
+  }
+
+  const err = validateStep();
+  if (err){
+    el.msg.textContent = err;
+    el.msg.className = "msg bad";
+    return;
+  }
+
+  const next = clamp(state.stepIndex + 1, 0, STEPS.length - 1);
+  if (STEPS[next].type === "reveal" && !state.codeUnlocked){
+    el.msg.textContent = "Сначала введи правильный код 🙂";
+    el.msg.className = "msg bad";
+    return;
+  }
+
+  state.stepIndex = next;
+  render();
+});
+
+el.backBtn.addEventListener("click", () => {
+  state.stepIndex = clamp(state.stepIndex - 1, 0, STEPS.length - 1);
+  render();
+});
+
+// Таймер для вайба
+const startTs = Date.now();
+setInterval(() => {
+  const sec = Math.floor((Date.now() - startTs) / 1000);
+  const mm = String(Math.floor(sec / 60)).padStart(2, "0");
+  const ss = String(sec % 60).padStart(2, "0");
+  el.timer.textContent = `⏱ ${mm}:${ss}`;
+}, 500);
+
+render();
+</script>
+</body>
+</html>

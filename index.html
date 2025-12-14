@@ -554,7 +554,7 @@ function validateCurrentStep(){
   if (step.type === "code"){
     const entered = String(val || "").trim();
     if (!entered) return null;
-    if (CONFIG.secretCode === "15-KST-KURSKURS-12") return "Этот портал ещё запечатан.";
+    if (CONFIG.secretCode === "CHANGE_ME") return "Этот портал ещё запечатан.";
     if (entered !== CONFIG.secretCode) return "Ключ не подходит.";
     state.codeUnlocked = true;
     return null;

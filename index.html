@@ -159,12 +159,15 @@
     }
     .choice input{ accent-color: var(--acid); }
 
+    /* ВОТ ЭТО ИЗМЕНЕНИЕ: центрируем кнопки всегда */
     .row{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-  margin-top: 16px;
-  justify-content: center;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top: 16px;
+      width: 100%;
+      justify-content: center;
+      align-items: center;
     }
 
     button{
@@ -254,7 +257,6 @@
 
 <script>
 const CONFIG = {
-  // ТВОЙ РЕАЛЬНЫЙ КОД:
   secretCode: "15-KST-KURSKURS-12",
   qrImageSrc: "qr.png",
 };
@@ -282,7 +284,7 @@ const STEPS = [
 
   { id:"js11", type:"text",
     title:"Сколько будет 1 + 1 на языке JavaScript?",
-    placeholder:"",            // можно оставить пустым
+    placeholder:"",
     correctText:"11",
     wrongMsg:"Попробуй быть чуточку проще."
   },
@@ -497,12 +499,8 @@ function renderReveal(step){
     </div>
   `;
   el.stage.appendChild(box);
-    }
+}
 
-/**
- * Если ничего не введено/не выбрано — молчим (return null).
- * Если неверно — показываем только wrongMsg.
- */
 function validateCurrentStep(){
   const step = STEPS[state.stepIndex];
   const val = state.answers[step.id];
@@ -528,10 +526,7 @@ function validateCurrentStep(){
     const entered = String(val || "").trim();
     if (!entered) return null;
 
-    // Единственная проверка "запечатан" — если код не настроен
     if (CONFIG.secretCode === "CHANGE_ME") return "Этот портал ещё запечатан.";
-
-    // Проверка введённого кода
     if (entered !== CONFIG.secretCode) return "Ключ не подходит.";
 
     state.codeUnlocked = true;

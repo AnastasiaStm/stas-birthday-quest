@@ -253,101 +253,78 @@
 
 <script>
 const CONFIG = {
+  // ТВОЙ РЕАЛЬНЫЙ КОД:
   secretCode: "15-KST-KURSKURS-12",
   qrImageSrc: "qr.png",
 };
 
 const STEPS = [
-  {
-    id: "start",
-    type: "start",
-    big: "Вас очень сильно любят, поэтому просто расслабьтесь и получайте удовольствие",
-    small: "Сделайте Тык и да начнется приключение."
+  { id:"start", type:"start",
+    big:"Вас очень сильно любят, поэтому просто расслабьтесь и получайте удовольствие",
+    small:"Сделайте Тык и да начнется приключение."
   },
 
-  {
-    id: "kotlin1",
-    type: "mcq",
-    title: "Что выведет этот Kotlin-код?",
-    code: 'println("2" + 2)',
-    options: ["4", "22", "Ошибка", "Ничего, ведь Стас не включил компилятор"],
-    correctIndex: 1,
-    wrongMsg: "А вот и неть с:"
+  { id:"kotlin1", type:"mcq",
+    title:"Что выведет этот Kotlin-код?",
+    code:'println("2" + 2)',
+    options:["4","22","Ошибка","Ничего, ведь Стас не включил компилятор"],
+    correctIndex:1,
+    wrongMsg:"А вот и неть с:"
   },
 
-  {
-    id: "lily",
-    type: "mcq",
-    title: "Кому принадлежит знаменитая фраза: “You son of a bitch?”",
-    options: ["Lily Potter", "Lily Whatever-her-surname-is", "Lily Aldrin", "Lily Shmili Vily"],
-    correctIndex: 2,
-    wrongMsg: "Please."
+  { id:"lily", type:"mcq",
+    title:"Кому принадлежит знаменитая фраза: “You son of a bitch?”",
+    options:["Lily Potter","Lily Whatever-her-surname-is","Lily Aldrin","Lily Shmili Vily"],
+    correctIndex:2,
+    wrongMsg:"Please."
   },
 
-  {
-    id: "js11",
-    type: "text",
-    title: "Сколько будет 1 + 1 на языке JavaScript?",
-    placeholder: "введи ответ",
-    correctText: "11",
-    wrongMsg: "Попробуй быть чуточку проще."
+  { id:"js11", type:"text",
+    title:"Сколько будет 1 + 1 на языке JavaScript?",
+    placeholder:"",            // можно оставить пустым
+    correctText:"11",
+    wrongMsg:"Попробуй быть чуточку проще."
   },
 
-  {
-    id: "pickle",
-    type: "mcq",
-    title: "В какой серии какого сезона Рик стал огурчиком?",
-    options: ["2 серия 4 сезон", "3 серия 3 сезон", "4 серия 2 сезон", "5 серия 2 сезона"],
-    correctIndex: 1,
-    wrongMsg: "Oh geez, Stas"
+  { id:"pickle", type:"mcq",
+    title:"В какой серии какого сезона Рик стал огурчиком?",
+    options:["2 серия 4 сезон","3 серия 3 сезон","4 серия 2 сезон","5 серия 2 сезона"],
+    correctIndex:1,
+    wrongMsg:"Oh geez, Stas"
   },
 
-  {
-    id: "kotlinElvis",
-    type: "mcq",
-    title: "Как называется оператор ?: в Kotlin?",
-    options: ["Элвис оператор", "Дарвин оператор", "Моцарт оператор", "Рик оператор"],
-    correctIndex: 0,
-    wrongMsg: "Uh-oh, wrong timeline, Morty."
+  { id:"kotlinElvis", type:"mcq",
+    title:"Как называется оператор ?: в Kotlin?",
+    options:["Элвис оператор","Дарвин оператор","Моцарт оператор","Рик оператор"],
+    correctIndex:0,
+    wrongMsg:"Uh-oh, wrong timeline, Morty."
   },
 
-  {
-    id: "situation",
-    type: "mcq",
-    title: "Продолжи фразу: “В любой непонятной ситуации…”",
-    options: ["Говори Вубба Лубба даб-даб", "Показывай письку", "Садись писать код", "Можно прояснить ситуацию."],
-    correctIndex: 1,
-    wrongMsg: "На самом деле ты знаешь правильный ответ, не отрицай этого."
+  { id:"situation", type:"mcq",
+    title:"Продолжи фразу: “В любой непонятной ситуации…”",
+    options:["Говори Вубба Лубба даб-даб","Показывай письку","Садись писать код","Можно прояснить ситуацию."],
+    correctIndex:1,
+    wrongMsg:"На самом деле ты знаешь правильный ответ, не отрицай этого."
   },
 
-  {
-    id: "love",
-    type: "mcq",
-    title: "Просто сделай тык",
-    options: ["Я тебя люблю"],
-    correctIndex: 0,
-    wrongMsg: ""
+  { id:"love", type:"mcq",
+    title:"Просто сделай тык",
+    options:["Я тебя люблю"],
+    correctIndex:0,
+    wrongMsg:""
   },
 
-  {
-    id: "code",
-    type: "code",
-    title: "Введите код (Нася может подсказать, где найти код)",
-    placeholder: "код"
+  { id:"code", type:"code",
+    title:"Введите код (Нася может подсказать, где найти код)",
+    placeholder:""
   },
 
-  {
-    id: "reveal",
-    type: "reveal",
-    title: "Портал открыт."
-  }
+  { id:"reveal", type:"reveal",
+    title:"Портал открыт."
+  },
 ];
 
-let state = {
-  stepIndex: 0,
-  answers: {},
-  codeUnlocked: false
-};
+let state = { stepIndex:0, answers:{}, codeUnlocked:false };
 
 const el = {
   stage: document.getElementById("stage"),
@@ -552,14 +529,17 @@ function validateCurrentStep(){
   }
 
   if (step.type === "code"){
-  const entered = String(val || "").trim();
-  if (!entered) return null;
+    const entered = String(val || "").trim();
+    if (!entered) return null;
 
-  if (CONFIG.secretCode === "CHANGE_ME") return "Этот портал ещё запечатан.";
-  if (entered !== CONFIG.secretCode) return "Ключ не подходит.";
+    // Единственная проверка "запечатан" — если код не настроен
+    if (CONFIG.secretCode === "CHANGE_ME") return "Этот портал ещё запечатан.";
 
-  state.codeUnlocked = true;
-  return null;
+    // Проверка введённого кода
+    if (entered !== CONFIG.secretCode) return "Ключ не подходит.";
+
+    state.codeUnlocked = true;
+    return null;
   }
 
   return null;

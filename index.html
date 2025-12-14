@@ -491,17 +491,12 @@ function renderReveal(step){
   const box = document.createElement("div");
   box.className = "q";
   box.innerHTML = `
-    <div class="q-title">${escapeHtml(step.title)}</div>
     <div class="qrWrap">
       <img class="qr" src="${CONFIG.qrImageSrc}" alt="QR"/>
-      <div class="small">
-        Сканируй QR и иди дальше.<br/><br/>
-        Если QR не видно — проверь, что файл ${escapeHtml(CONFIG.qrImageSrc)} лежит рядом с index.html.
-      </div>
     </div>
   `;
   el.stage.appendChild(box);
-}
+    }
 
 /**
  * Если ничего не введено/не выбрано — молчим (return null).

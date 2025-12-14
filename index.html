@@ -552,12 +552,14 @@ function validateCurrentStep(){
   }
 
   if (step.type === "code"){
-    const entered = String(val || "").trim();
-    if (!entered) return null;
-    if (CONFIG.secretCode === "CHANGE_ME") return "Этот портал ещё запечатан.";
-    if (entered !== CONFIG.secretCode) return "Ключ не подходит.";
-    state.codeUnlocked = true;
-    return null;
+  const entered = String(val || "").trim();
+  if (!entered) return null;
+
+  if (CONFIG.secretCode === "CHANGE_ME") return "Этот портал ещё запечатан.";
+  if (entered !== CONFIG.secretCode) return "Ключ не подходит.";
+
+  state.codeUnlocked = true;
+  return null;
   }
 
   return null;
